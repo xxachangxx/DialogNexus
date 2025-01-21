@@ -9,17 +9,18 @@ import { useChatHandlers } from '@/hooks/useChatHandlers';
 export default function Home() {
   const {
     messages,
-    isModalOpen,
+    isLoading,
     inputText,
+    isModalOpen,
     isClearConfirmOpen,
+    handleSend,
+    handleInputChange,
     handleEdit,
     handleModalSubmit,
     handleModalClose,
-    handleClear,
+    handleClearConfirmOpen,
     handleClearConfirm,
     handleClearCancel,
-    handleInputChange,
-    handleSend
   } = useChatHandlers();
 
   return (
@@ -30,8 +31,9 @@ export default function Home() {
           value={inputText}
           onChange={handleInputChange}
           onEdit={handleEdit}
-          onClear={handleClear}
+          onClear={handleClearConfirmOpen}
           onSend={handleSend}
+          disabled={isLoading}
         />
       </div>
       <EditModal 
