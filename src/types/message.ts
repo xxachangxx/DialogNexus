@@ -1,6 +1,18 @@
+export type Role = 'user' | 'assistant' | 'system'
+
 export interface Message {
-    id: string;
+    id?: string;
     content: string;
-    timestamp: Date;
-    role: 'user' | 'assistant';
-  } 
+    createdAt?: Date;
+    role: Role;
+}
+
+export interface ChatRequest {
+    message: string;
+}
+
+export interface ChatResponse {
+    content: string;
+    role: Role;
+    error?: string;
+} 

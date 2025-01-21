@@ -1,80 +1,131 @@
-import { useState } from 'react';
-import { Message } from '../types/message';
+import { useState } from 'react'
+import type { Message } from '@/types/message'
 
-export const useChatHandlers = () => {
-  // 存储聊天消息列表
-  const [messages, setMessages] = useState<Message[]>([]);
-  // 控制编辑模态框的显示状态
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  // 存储输入框的文本内容
-  const [inputText, setInputText] = useState("");
-  // 控制清空确认模态框的显示状态
-  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+// 生成唯一ID的辅助函数
+const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
-  // 打开编辑模态框
-  const handleEdit = () => {
-    setIsModalOpen(true);
-  };
+export function useChatHandlers() {
+  // 聊天核心状态
+  const [messages, setMessages] = useState<Message[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
-  // 提交编辑模态框的内容并关闭
-  const handleModalSubmit = (text: string) => {
-    setInputText(text);
-    setIsModalOpen(false);
-  };
+  // UI 状态
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [inputText, setInputText] = useState("")
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false)
 
-  // 关闭编辑模态框
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-  };
+  // 消息处理
+  const sendMessage = async (content: string) => {
+    try {
+      setIsLoading(true)
+      
+      // 添加用户消息
+      const userMessage: Message = {
+        id: generateId(),
+        content,
+        role: 'user',
+        createdAt: new Date()
+      }
+      setMessages(prev => [...prev, userMessage])
 
-  // 确认清空所有消息
-  const handleClearConfirm = () => {
-    setMessages([]);
-    setIsClearConfirmOpen(false);
-  };
+      // 发送到API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: content }),
+      })
 
-  // 取消清空操作
-  const handleClearCancel = () => {
-    setIsClearConfirmOpen(false);
-  };
+      const data = await response.json()
 
-  // 触发清空确认框
-  const handleClear = () => {
-    if (messages.length > 0) {
-      setIsClearConfirmOpen(true);
+      if (!response.ok) {
+        throw new Error(data.error || '发送消息失败')
+      }
+
+      if (!data.content || !data.role) {
+        throw new Error('API 响应格式错误')
+      }
+
+      // 添加助手回复
+      const assistantMessage: Message = {
+        id: generateId(),
+        content: data.content,
+        role: data.role,
+        createdAt: new Date()
+      }
+      setMessages(prev => [...prev, assistantMessage])
+
+    } catch (error) {
+      console.error('发送消息错误:', error)
+      // 添加错误消息到聊天记录
+      const errorMessage: Message = {
+        id: generateId(),
+        content: error instanceof Error ? error.message : '发送消息时发生错误',
+        role: 'system',
+        createdAt: new Date()
+      }
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
 
-  // 处理输入框内容变化
-  const handleInputChange = (text: string) => {
-    setInputText(text);
-  };
-
-  // 发送消息
+  // 发送消息并清空输入
   const handleSend = () => {
     if (inputText.trim()) {
-      setMessages([...messages, {
-        id: Date.now().toString(),
-        content: inputText,
-        timestamp: new Date(),
-        role: 'user'
-      }]);
-      setInputText("");
+      sendMessage(inputText)
+      setInputText('') // 直接在这里清空输入，不需要通过额外的函数调用
     }
-  };
+  }
+
+  // UI 处理函数
+  const handleInputChange = (text: string) => {
+    setInputText(text)
+  }
+
+  const handleEdit = () => {
+    setIsModalOpen(true)
+  }
+
+  const handleModalSubmit = (text: string) => {
+    setInputText(text)
+    setIsModalOpen(false)
+  }
+
+  const handleModalClose = () => {
+    setIsModalOpen(false)
+  }
+
+  const handleClearConfirmOpen = () => {
+    setIsClearConfirmOpen(true)
+  }
+
+  const handleClearConfirm = () => {
+    setMessages([])
+    setIsClearConfirmOpen(false)
+  }
+
+  const handleClearCancel = () => {
+    setIsClearConfirmOpen(false)
+  }
 
   return {
+    // 状态
     messages,
-    isModalOpen,
+    isLoading,
     inputText,
+    isModalOpen,
     isClearConfirmOpen,
+
+    // 方法
+    handleSend,
+    handleInputChange,
     handleEdit,
     handleModalSubmit,
     handleModalClose,
-    handleClear,
+    handleClearConfirmOpen,
     handleClearConfirm,
     handleClearCancel,
-    handleInputChange,
-    handleSend
-  };
-};
+  }
+} 
