@@ -26,7 +26,9 @@ export default function Home() {
   return (
     <div className="w-screen h-screen flex items-center justify-center bg-gray-50">
       <div className="chat-container">
-        <ChatBox messages={messages} />
+        <ChatBox 
+          messages={messages} 
+        />
         <InputArea 
           value={inputText}
           onChange={handleInputChange}
