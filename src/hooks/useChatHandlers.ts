@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { ClientDisplayMessage, LLMMessage } from '@/types/message'
+import { createSystemMessage, createUserMessage, createAssistantMessage } from './chatUtils'
 
 // 生成唯一ID的辅助函数
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -20,25 +21,15 @@ export function useChatHandlers() {
   // 消息处理
   const sendMessage = async (content: string) => {
     // 创建一个临时的 assistant 消息用于流式更新
-    const tempAssistantMessage: ClientDisplayMessage = {
-      id: generateId(),
-      content: '',
-      role: 'assistant',
-      createdAt: new Date()
-    }
+    const tempAssistantMessage: ClientDisplayMessage = createAssistantMessage("")
 
     try {
       setIsLoading(true)
       
       // 添加用户消息
-      const userMessage: ClientDisplayMessage = {
-        id: generateId(),
-        content,
-        role: 'user',
-        createdAt: new Date()
-      }
+      const userMessage: ClientDisplayMessage = createUserMessage(content)
+
       setMessages(prev => [...prev, userMessage])
-      setMessages(prev => [...prev, tempAssistantMessage])
 
       // 提取messages中的role和content，形成一个新的LLMMessage数组
       const llmMessages: LLMMessage[] = [

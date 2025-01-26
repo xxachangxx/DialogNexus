@@ -1,6 +1,6 @@
 import { ClientDisplayMessage } from "../types/message";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/tailwind-utils";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 
 interface ChatBoxProps {
