@@ -1,10 +1,7 @@
 import { useState } from 'react'
 import type { ClientDisplayMessage, LLMMessage } from '@/types/message'
-import { createSystemMessage, createUserMessage, createAssistantMessage } from './chatUtils'
+import { generateId ,createSystemMessage, createUserMessage, createAssistantMessage } from './chatUtils'
 import { StreamingChatClient } from '@/services/StreamingChatClient'
-
-// 生成唯一ID的辅助函数
-const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
 // 创建单个客户端实例
 const chatClient = new StreamingChatClient()

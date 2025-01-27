@@ -11,7 +11,7 @@ type CreateMessageParams = {
  * 生成唯一的消息ID
  * @returns {string} 基于时间戳和随机字符串的唯一ID
  */
-const generateId = () =>
+export const generateId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 
 /**
