@@ -1,14 +1,19 @@
 export type Role = 'user' | 'assistant' | 'system'
 
-export interface Message {
+export interface ClientDisplayMessage {
     id?: string;
     content: string;
     createdAt?: Date;
     role: Role;
 }
 
+export interface LLMMessage {
+    role: Role;
+    content: string;
+}
+
 export interface ChatRequest {
-    message: string;
+    message: LLMMessage;
 }
 
 export interface ChatResponse {

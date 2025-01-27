@@ -34,7 +34,7 @@ const InputArea: React.FC<InputAreaProps> = ({
     }}
 
   return (
-    <div className="flex flex-row h-[100px] p-2.5 gap-2.5 items-center border-t-2 border-t-gray-200">
+    <div className="flex flex-row h-[150px] p-2.5 gap-2.5 items-center border-t-2 border-t-gray-200">
       <Textarea
         id="message-input"
         className='resize-none'
