@@ -1,9 +1,13 @@
 import { useState } from 'react'
 import type { ClientDisplayMessage, LLMMessage } from '@/types/message'
 import { createSystemMessage, createUserMessage, createAssistantMessage } from './chatUtils'
+import { StreamingChatClient } from '@/services/StreamingChatClient'
 
 // 生成唯一ID的辅助函数
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+// 创建单个客户端实例
+const chatClient = new StreamingChatClient()
 
 export function useChatHandlers() {
   // 聊天核心状态
@@ -27,114 +31,52 @@ export function useChatHandlers() {
       setIsLoading(true)
       
       // 添加用户消息
-      const userMessage: ClientDisplayMessage = createUserMessage(content)
-      setMessages(prev => [...prev, userMessage])
+      const userNewMessage: ClientDisplayMessage = createUserMessage(content)
+      setMessages(prev => [...prev, userNewMessage])
 
       // 添加临时的assistant消息, 用于流式更新并实时渲染一个新气泡
       setMessages(prev => [...prev, tempAssistantMessage])
 
       // 提取messages中的role和content，形成一个新的LLMMessage数组
-      const llmMessages: LLMMessage[] = [
-        ...messages.map(message => ({
-          role: message.role,
-          content: message.content
-        })),
-        {
-          role: userMessage.role,
-          content: userMessage.content
-        }
-      ]
+      const llmMessages = messages.map(({ role, content }) => ({ role, content })) as LLMMessage[];
+      llmMessages.push({ role: userNewMessage.role, content: userNewMessage.content });
 
       console.log('准备发送的消息列表:', JSON.stringify(llmMessages, null, 2));
-      console.log('发送消息到API');
       
-      // 发送到API并处理流式响应
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // 使用共享的chatClient实例处理流式响应
+      await chatClient.streamChat(llmMessages, {
+        onStart: () => {
+          console.log('开始处理流式响应');
         },
-        body: JSON.stringify({ messages: llmMessages }),
-      })
-
-      console.log('API响应状态:', response.status, response.statusText);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('API错误详情:', errorData);
-        throw new Error(errorData.details || '发送消息失败')
-      }
-
-      if (!response.body) {
-        throw new Error('没有响应数据')
-      }
-
-      console.log('开始处理流式响应');
-      
-      // 读取流式响应
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let chunkCount = 0;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          console.log('流式响应结束，总共接收chunks:', chunkCount);
-          break;
-        }
-
-        // 解码收到的数据
-        const chunk = decoder.decode(value);
-        console.log('收到原始chunk数据:', chunk);
-        const lines = chunk.split('\n');
-        
-        // 处理每一行数据
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(5));
-              
-              // 检查是否有错误
-              if (data.error) {
-                console.error('收到错误信息:', data.error);
-                throw new Error(data.error);
-              }
-              
-              // 检查是否是结束信号
-              if (data.done) {
-                console.log('收到流式响应结束信号');
-                break;
-              }
-              
-              if (data.content) {
-                chunkCount++;
-                
-                console.log(`处理第 ${chunkCount} 个chunk:`, data.content);
-                
-                // 更新临时消息的内容
-                setMessages(prev => {
-                  const latestMessages = [...prev];
-                  const messageIndex = latestMessages.findIndex(msg => msg.id === tempAssistantMessage.id);
-                  
-                  if (messageIndex !== -1) {
-                    latestMessages[messageIndex] = {
-                      ...latestMessages[messageIndex],
-                      content: latestMessages[messageIndex].content + data.content // 累积内容
-                    };
-                  }
-                  
-                  return latestMessages;
-                });
-              }
-            } catch (e) {
-              console.error('解析流式数据错误:', e, '原始数据:', line);
-              throw e; // 重新抛出错误以触发错误处理
+        onToken: (token) => {
+          console.log('收到token:', token);
+          // 更新临时消息的内容
+          setMessages(prev => {
+            const latestMessages = [...prev];
+            const messageIndex = latestMessages.findIndex(msg => msg.id === tempAssistantMessage.id);
+            
+            if (messageIndex !== -1) {
+              latestMessages[messageIndex] = {
+                ...latestMessages[messageIndex],
+                content: latestMessages[messageIndex].content + token
+              };
             }
-          }
+            
+            return latestMessages;
+          });
+        },
+        onError: (error) => {
+          console.error('流式处理错误:', error);
+          // 添加错误消息到聊天记录
+          const errorMessage: ClientDisplayMessage = createSystemMessage(error.message)
+          setMessages(prev => prev.map(msg => 
+            msg.id === tempAssistantMessage.id ? errorMessage : msg
+          ));
+        },
+        onFinish: () => {
+          console.log('流式响应处理完成');
         }
-      }
-
-      console.log('流式响应处理完成');
+      });
 
     } catch (error) {
       console.error('发送消息错误:', error);
@@ -144,7 +86,7 @@ export function useChatHandlers() {
         msg.id === tempAssistantMessage.id ? errorMessage : msg
       ));
     } finally {
-      setIsLoading(false); // 确保在所有情况下都重置加载状态
+      setIsLoading(false);
     }
   }
 
@@ -183,7 +125,8 @@ export function useChatHandlers() {
   }
 
   const handleClearConfirm = () => {
-    setMessages([])
+    const initialMessages = createSystemMessage("You are a helpful assistant.")
+    setMessages([initialMessages])
     setIsClearConfirmOpen(false)
   }
 

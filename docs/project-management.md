@@ -15,6 +15,7 @@
 - UI 组件库：shadcn/ui
 - 样式：Tailwind CSS
 - 状态管理：React Hooks
+- 设计模式：观察者模式（流式处理优化变体）
 - 测试：待定
 
 ## 已完成需求
@@ -49,6 +50,11 @@
 - [x] 打字机效果显示
 - [x] 错误恢复机制
 - [x] 消息状态管理优化
+- [x] 重构流式处理架构
+  - [x] 实现 StreamingChatClient 类
+  - [x] 优化观察者模式
+  - [x] 完善错误处理
+  - [x] 提升代码可测试性
 
 ## 待实现需求（近期）
 
@@ -114,6 +120,7 @@
 2. TypeScript：增强代码质量和开发体验
 3. Tailwind CSS：快速构建自定义 UI
 4. shadcn/ui：可定制的组件库
+5. 观察者模式变体：优化流式数据处理
 
 ### 状态管理
 - 使用 React Hooks (useState, useEffect)
