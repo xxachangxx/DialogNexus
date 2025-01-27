@@ -26,68 +26,55 @@ export function useChatHandlers() {
   const sendMessage = async (content: string) => {
     // 创建一个临时的 assistant 消息用于流式更新
     const tempAssistantMessage: ClientDisplayMessage = createAssistantMessage("")
+    
+    setIsLoading(true)
+    
+    // 添加用户消息
+    const userNewMessage: ClientDisplayMessage = createUserMessage(content)
+    setMessages(prev => [...prev, userNewMessage])
 
-    try {
-      setIsLoading(true)
-      
-      // 添加用户消息
-      const userNewMessage: ClientDisplayMessage = createUserMessage(content)
-      setMessages(prev => [...prev, userNewMessage])
+    // 添加临时的assistant消息
+    setMessages(prev => [...prev, tempAssistantMessage])
 
-      // 添加临时的assistant消息, 用于流式更新并实时渲染一个新气泡
-      setMessages(prev => [...prev, tempAssistantMessage])
+    // 提取messages中的role和content
+    const llmMessages = messages.map(({ role, content }) => ({ role, content })) as LLMMessage[];
+    llmMessages.push({ role: userNewMessage.role, content: userNewMessage.content });
 
-      // 提取messages中的role和content，形成一个新的LLMMessage数组
-      const llmMessages = messages.map(({ role, content }) => ({ role, content })) as LLMMessage[];
-      llmMessages.push({ role: userNewMessage.role, content: userNewMessage.content });
-
-      console.log('准备发送的消息列表:', JSON.stringify(llmMessages, null, 2));
-      
-      // 使用共享的chatClient实例处理流式响应
-      await chatClient.streamChat(llmMessages, {
-        onStart: () => {
-          console.log('开始处理流式响应');
-        },
-        onToken: (token) => {
-          console.log('收到token:', token);
-          // 更新临时消息的内容
-          setMessages(prev => {
-            const latestMessages = [...prev];
-            const messageIndex = latestMessages.findIndex(msg => msg.id === tempAssistantMessage.id);
-            
-            if (messageIndex !== -1) {
-              latestMessages[messageIndex] = {
-                ...latestMessages[messageIndex],
-                content: latestMessages[messageIndex].content + token
-              };
-            }
-            
-            return latestMessages;
-          });
-        },
-        onError: (error) => {
-          console.error('流式处理错误:', error);
-          // 添加错误消息到聊天记录
-          const errorMessage: ClientDisplayMessage = createSystemMessage(error.message)
-          setMessages(prev => prev.map(msg => 
-            msg.id === tempAssistantMessage.id ? errorMessage : msg
-          ));
-        },
-        onFinish: () => {
-          console.log('流式响应处理完成');
-        }
-      });
-
-    } catch (error) {
-      console.error('发送消息错误:', error);
-      // 添加错误消息到聊天记录
-      const errorMessage: ClientDisplayMessage = createSystemMessage(error instanceof Error ? error.message : '发送消息时发生错误')
-      setMessages(prev => prev.map(msg => 
-        msg.id === tempAssistantMessage.id ? errorMessage : msg
-      ));
-    } finally {
-      setIsLoading(false);
-    }
+    console.log('准备发送的消息列表:', JSON.stringify(llmMessages, null, 2));
+    
+    // 使用共享的chatClient实例处理流式响应
+    await chatClient.streamChat(llmMessages, {
+      onStart: () => {
+        console.log('开始处理流式响应');
+      },
+      onToken: (token) => {
+        console.log('收到token:', token);
+        setMessages(prev => {
+          const latestMessages = [...prev];
+          const messageIndex = latestMessages.findIndex(msg => msg.id === tempAssistantMessage.id);
+          
+          if (messageIndex !== -1) {
+            latestMessages[messageIndex] = {
+              ...latestMessages[messageIndex],
+              content: latestMessages[messageIndex].content + token
+            };
+          }
+          
+          return latestMessages;
+        });
+      },
+      onError: (error) => {
+        console.error('流式处理错误:', error);
+        const errorMessage: ClientDisplayMessage = createSystemMessage(error.message)
+        setMessages(prev => prev.map(msg => 
+          msg.id === tempAssistantMessage.id ? errorMessage : msg
+        ));
+      },
+      onFinish: () => {
+        console.log('流式响应处理完成');
+        setIsLoading(false);
+      }
+    });
   }
 
   // 发送消息并清空输入
