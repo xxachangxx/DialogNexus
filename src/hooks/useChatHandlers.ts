@@ -28,8 +28,10 @@ export function useChatHandlers() {
       
       // 添加用户消息
       const userMessage: ClientDisplayMessage = createUserMessage(content)
-
       setMessages(prev => [...prev, userMessage])
+
+      // 添加临时的assistant消息, 用于流式更新并实时渲染一个新气泡
+      setMessages(prev => [...prev, tempAssistantMessage])
 
       // 提取messages中的role和content，形成一个新的LLMMessage数组
       const llmMessages: LLMMessage[] = [
@@ -72,7 +74,6 @@ export function useChatHandlers() {
       // 读取流式响应
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let accumulatedContent = '';
       let chunkCount = 0;
 
       while (true) {
@@ -106,17 +107,24 @@ export function useChatHandlers() {
               }
               
               if (data.content) {
-                accumulatedContent += data.content;
                 chunkCount++;
                 
                 console.log(`处理第 ${chunkCount} 个chunk:`, data.content);
                 
                 // 更新临时消息的内容
-                setMessages(prev => prev.map(msg => 
-                  msg.id === tempAssistantMessage.id
-                    ? { ...msg, content: accumulatedContent }
-                    : msg
-                ));
+                setMessages(prev => {
+                  const latestMessages = [...prev];
+                  const messageIndex = latestMessages.findIndex(msg => msg.id === tempAssistantMessage.id);
+                  
+                  if (messageIndex !== -1) {
+                    latestMessages[messageIndex] = {
+                      ...latestMessages[messageIndex],
+                      content: latestMessages[messageIndex].content + data.content // 累积内容
+                    };
+                  }
+                  
+                  return latestMessages;
+                });
               }
             } catch (e) {
               console.error('解析流式数据错误:', e, '原始数据:', line);
@@ -131,12 +139,7 @@ export function useChatHandlers() {
     } catch (error) {
       console.error('发送消息错误:', error);
       // 添加错误消息到聊天记录
-      const errorMessage: ClientDisplayMessage = {
-        id: generateId(),
-        content: error instanceof Error ? error.message : '发送消息时发生错误',
-        role: 'system',
-        createdAt: new Date()
-      }
+      const errorMessage: ClientDisplayMessage = createSystemMessage(error instanceof Error ? error.message : '发送消息时发生错误')
       setMessages(prev => prev.map(msg => 
         msg.id === tempAssistantMessage.id ? errorMessage : msg
       ));
