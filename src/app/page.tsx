@@ -29,10 +29,10 @@ export default function Home() {
     <main className="w-screen h-screen flex">
       <SidebarProvider>
         <SideBar />
-      <SidebarInset>
-        <section className="flex-1 h-full bg-gray-50 p-6">
-          <div
-            className="h-full 
+        <SidebarInset>
+          <section className="flex-1 h-full bg-gray-50 p-6">
+            <div
+              className="h-full 
                     w-full 
                     border 
                     border-gray-200 
@@ -43,19 +43,19 @@ export default function Home() {
                     justify-between
                     shadow-sm
                     overflow-hidden"
-          >
-            <ChatBox messages={messages} />
-            <InputArea
-              value={inputText}
-              onChange={handleInputChange}
-              onEdit={handleEdit}
-              onClear={handleClearConfirmOpen}
-              onSend={handleSend}
-              disabled={isLoading}
-            />
-          </div>
-        </section>
-      </SidebarInset>
+            >
+              <ChatBox messages={messages} />
+              <InputArea
+                value={inputText}
+                onChange={handleInputChange}
+                onEdit={handleEdit}
+                onClear={handleClearConfirmOpen}
+                onSend={handleSend}
+                disabled={isLoading}
+              />
+            </div>
+          </section>
+        </SidebarInset>
       </SidebarProvider>
       <EditModal
         isOpen={isModalOpen}
