@@ -1,37 +1,48 @@
-import { useState } from 'react'
-import type { ClientDisplayMessage, LLMMessage } from '@/types/message'
-import { generateId ,createSystemMessage, createUserMessage, createAssistantMessage } from './chatUtils'
+import type { LLMMessage } from '@/types/message'
+import { createUserMessage, createAssistantMessage } from './chatUtils'
 import { StreamingChatClient } from '@/services/StreamingChatClient'
+import { useUIStore } from '@/store/ui'
+import { useChatStore } from '@/store/chat'
 
 // 创建单个客户端实例
 const chatClient = new StreamingChatClient()
 
 export function useChatHandlers() {
-  // 聊天核心状态
-  const [systemPrompt, setSystemPrompt] = useState<string>("You are a helpful assistant.")
-  const [messages, setMessages] = useState<ClientDisplayMessage[]>([
-    {id: generateId(), content: systemPrompt, role: "system", createdAt: new Date()}
-  ])
-  const [isLoading, setIsLoading] = useState(false)
+  // 从zustand获取状态和方法
+  const { 
+    messages,
+    systemPrompt,
+    isLoading,
+    setIsLoading,
+    addMessage,
+    appendToLastMessage,
+    setSystemPrompt,
+    clearMessages
+  } = useChatStore()
 
-  // UI 状态
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [inputText, setInputText] = useState("")
-  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false)
+  const { 
+    inputText, 
+    isModalOpen, 
+    isClearConfirmOpen,
+    setInputText,
+    setIsModalOpen,
+    setIsClearConfirmOpen,
+    clearInputText
+  } = useUIStore()
 
   // 消息处理
   const sendMessage = async (content: string) => {
     // 创建一个临时的 assistant 消息用于流式更新
-    const tempAssistantMessage: ClientDisplayMessage = createAssistantMessage("")
+    const tempAssistantMessage = createAssistantMessage("")
     
     setIsLoading(true)
     
     // 添加用户消息
-    const userNewMessage: ClientDisplayMessage = createUserMessage(content)
-    setMessages(prev => [...prev, userNewMessage])
+    const userNewMessage = createUserMessage(content)
+    addMessage(userNewMessage)
 
     // 添加临时的assistant消息
-    setMessages(prev => [...prev, tempAssistantMessage])
+    addMessage(tempAssistantMessage)
 
     // 提取messages中的role和content
     const llmMessages = messages.map(({ role, content }) => ({ role, content })) as LLMMessage[];
@@ -46,26 +57,13 @@ export function useChatHandlers() {
       },
       onToken: (token) => {
         console.log('收到token:', token);
-        setMessages(prev => {
-          const latestMessages = [...prev];
-          const messageIndex = latestMessages.findIndex(msg => msg.id === tempAssistantMessage.id);
-          
-          if (messageIndex !== -1) {
-            latestMessages[messageIndex] = {
-              ...latestMessages[messageIndex],
-              content: latestMessages[messageIndex].content + token
-            };
-          }
-          
-          return latestMessages;
-        });
+        appendToLastMessage(token);
       },
       onError: (error) => {
         console.error('流式处理错误:', error);
-        const errorMessage: ClientDisplayMessage = createSystemMessage(error.message)
-        setMessages(prev => prev.map(msg => 
-          msg.id === tempAssistantMessage.id ? errorMessage : msg
-        ));
+        // 在错误情况下，我们需要替换整个消息内容
+        const errorMessage = createAssistantMessage(error.message);
+        addMessage(errorMessage);
       },
       onFinish: () => {
         console.log('流式响应处理完成');
@@ -78,7 +76,7 @@ export function useChatHandlers() {
   const handleSend = () => {
     if (inputText.trim()) {
       sendMessage(inputText)
-      setInputText('') 
+      clearInputText()
     }
   }
 
@@ -109,8 +107,7 @@ export function useChatHandlers() {
   }
 
   const handleClearConfirm = () => {
-    const initialMessages = createSystemMessage("You are a helpful assistant.")
-    setMessages([initialMessages])
+    clearMessages()
     setIsClearConfirmOpen(false)
   }
 
