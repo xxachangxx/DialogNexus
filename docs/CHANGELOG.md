@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+### 🛠 技术改进
+- 开始将React状态管理迁移至Zustand
+  - 创建store目录结构
+  - 迁移UI状态到Zustand
+  - 优化状态管理代码结构
+
+## [0.3.0-dev] - 2025-01-27
 ### ✨ 新增
 - 实现流式对话功能
   - 集成 OpenAI API
@@ -92,7 +99,8 @@
 - 基础项目结构搭建
 - 基础依赖配置
 
-[Unreleased]: https://github.com/xxachangxx/DialogNexus/compare/v0.2.0-dev...HEAD
+[Unreleased]: https://github.com/xxachangxx/DialogNexus/compare/v0.3.0-dev...HEAD
+[0.3.0-dev]: https://github.com/xxachangxx/DialogNexus/compare/v0.2.0-dev...v0.3.0-dev
 [0.2.0-dev]: https://github.com/xxachangxx/DialogNexus/compare/v0.1.0-dev...v0.2.0-dev
 [0.1.0-dev]: https://github.com/xxachangxx/DialogNexus/compare/v0.0.1-dev...v0.1.0-dev
 [0.0.1-dev]: https://github.com/xxachangxx/DialogNexus/releases/tag/v0.0.1-dev 
