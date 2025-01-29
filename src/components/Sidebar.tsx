@@ -8,18 +8,26 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuAction,
 } from "@/components/ui/sidebar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { SessionMap } from "@/types/session";
-import { Plus } from "lucide-react";
+import { Plus, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SideBarProps {
   sessions: SessionMap;
   handleAddSession: () => void;
+  handleRemoveSession: (id: string) => void;
 }
 
 
-const SideBar = ({ sessions, handleAddSession }: SideBarProps) => {
+const SideBar = ({ sessions, handleAddSession, handleRemoveSession }: SideBarProps) => {
   return (
     <Sidebar >
       <SidebarHeader>
@@ -32,7 +40,7 @@ const SideBar = ({ sessions, handleAddSession }: SideBarProps) => {
         <SidebarContent>
           <SidebarMenu>
             {Object.entries(sessions).map(([id, session]) => (
-              <SessionItem key={id} id={id} name={session.name} />
+              <SessionItem key={id} id={id} name={session.name} handleRemoveSession={handleRemoveSession} />
             ))}
           </SidebarMenu>
         </SidebarContent>
@@ -61,12 +69,24 @@ const CustomHeader = ({ children, className, handleAddSession }: { children: str
   )
 }
 
-const SessionItem = ({ id, name }: { id: string, name: string }) => {
+const SessionItem = ({ id, name, handleRemoveSession }: { id: string, name: string, handleRemoveSession: (id: string) => void }) => {
   return (
     <SidebarMenuItem key={id}>
-      <SidebarMenuButton className="h-12">
+      <SidebarMenuButton size="lg">
         <span>{name}</span>
       </SidebarMenuButton>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <SidebarMenuAction className="">
+            <MoreHorizontal />
+          </SidebarMenuAction>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="right" align="start">
+          <DropdownMenuItem onClick={() => handleRemoveSession(id)}>
+            <span>Delete Session</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </SidebarMenuItem>
   )
 }

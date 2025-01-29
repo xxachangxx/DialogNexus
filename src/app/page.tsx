@@ -25,12 +25,13 @@ export default function Home() {
     handleClearConfirm,
     handleClearCancel,
     handleAddSession,
+    handleRemoveSession,
   } = useChatHandlers();
 
   return (
     <main className="w-screen h-screen flex">
       <SidebarProvider>
-        <SideBar sessions={sessions} handleAddSession={handleAddSession} />
+        <SideBar sessions={sessions} handleAddSession={handleAddSession} handleRemoveSession={handleRemoveSession} />
         <SidebarInset>
           <section className="flex-1 h-full bg-gray-50 p-6">
             <div

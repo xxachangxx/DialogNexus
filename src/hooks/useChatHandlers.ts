@@ -38,6 +38,7 @@ export function useChatHandlers() {
     setCurrentSessionId,
     addSession,
     setMessages,
+    removeSession,
   } = useSessionStore()
 
   // 消息处理
@@ -141,6 +142,10 @@ export function useChatHandlers() {
       messages: [],
     })
   }
+  
+  const handleRemoveSession = (id: string) => {
+    removeSession(id)
+  }
 
 
 
@@ -148,6 +153,7 @@ export function useChatHandlers() {
     // 状态
     messages,
     sessions,
+    currentSessionId, 
     systemPrompt,
     isLoading,
     inputText,
@@ -166,5 +172,6 @@ export function useChatHandlers() {
     handleClearCancel,
     handleSessionClick,
     handleAddSession,
+    handleRemoveSession,
   }
 } 
