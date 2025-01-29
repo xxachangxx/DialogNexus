@@ -11,6 +11,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 export default function Home() {
   const {
     messages,
+    sessions,
     isLoading,
     inputText,
     isModalOpen,
@@ -23,12 +24,13 @@ export default function Home() {
     handleClearConfirmOpen,
     handleClearConfirm,
     handleClearCancel,
+    handleAddSession,
   } = useChatHandlers();
 
   return (
     <main className="w-screen h-screen flex">
       <SidebarProvider>
-        <SideBar />
+        <SideBar sessions={sessions} handleAddSession={handleAddSession} />
         <SidebarInset>
           <section className="flex-1 h-full bg-gray-50 p-6">
             <div

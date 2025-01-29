@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { ClientDisplayMessage } from "@/types/message";
-import { generateId, createSystemMessage } from "@/hooks/chatUtils";
+import { generateMsgId, createSystemMessage } from "@/hooks/chatUtils";
 
 interface ChatState {
   // 核心状态
@@ -21,7 +21,7 @@ export const useChatStore = create<ChatState>((set) => ({
   // 初始状态
   messages: [
     {
-      id: generateId(),
+      id: generateMsgId(),
       content: "You are a helpful assistant.",
       role: "system",
       createdAt: new Date(),

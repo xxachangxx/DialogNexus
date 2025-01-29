@@ -1,8 +1,10 @@
+
 import type { LLMMessage } from '@/types/message'
 import { createUserMessage, createAssistantMessage } from './chatUtils'
 import { StreamingChatClient } from '@/services/StreamingChatClient'
 import { useUIStore } from '@/store/ui'
 import { useChatStore } from '@/store/chat'
+import { useSessionStore } from '@/store/session'
 
 // 创建单个客户端实例
 const chatClient = new StreamingChatClient()
@@ -29,6 +31,14 @@ export function useChatHandlers() {
     setIsClearConfirmOpen,
     clearInputText
   } = useUIStore()
+
+  const {
+    sessions,
+    currentSessionId,
+    setCurrentSessionId,
+    addSession,
+    setMessages,
+  } = useSessionStore()
 
   // 消息处理
   const sendMessage = async (content: string) => {
@@ -115,9 +125,29 @@ export function useChatHandlers() {
     setIsClearConfirmOpen(false)
   }
 
+  // Session 处理函数
+  const handleSessionClick = (id: string) => {
+    const session = sessions[id]
+    setMessages(id, session.messages)
+    setCurrentSessionId(id)
+  }
+
+  const handleAddSession = () => {
+    addSession({
+      name: "新话题",
+      assistantName: "新助手",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      messages: [],
+    })
+  }
+
+
+
   return {
     // 状态
     messages,
+    sessions,
     systemPrompt,
     isLoading,
     inputText,
@@ -134,5 +164,7 @@ export function useChatHandlers() {
     handleClearConfirmOpen,
     handleClearConfirm,
     handleClearCancel,
+    handleSessionClick,
+    handleAddSession,
   }
 } 
