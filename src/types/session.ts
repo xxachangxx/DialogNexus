@@ -7,4 +7,4 @@ export interface Session {
     messages: ClientDisplayMessage[];
 }
 
-export type SessionMap = Record<string, Session>;
+export type SessionMap = Map<string, Session>;

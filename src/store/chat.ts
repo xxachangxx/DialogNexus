@@ -9,7 +9,7 @@ interface ChatState {
   isLoading: boolean;
 
   // 操作方法
-  setMessages: (clientDisplayMessages: ClientDisplayMessage[]) => void;
+  setClientDisplayMessages: (clientDisplayMessages: ClientDisplayMessage[]) => void;
   addMessage: (message: ClientDisplayMessage) => void;
   appendToLastMessage: (content: string) => void;
   setSystemPrompt: (prompt: string) => void;
@@ -31,7 +31,7 @@ export const useChatStore = create<ChatState>((set) => ({
   isLoading: false,
 
   // 状态更新方法
-  setMessages: (clientDisplayMessages) => set({ clientDisplayMessages }),
+  setClientDisplayMessages: (clientDisplayMessages) => set({ clientDisplayMessages }),
   addMessage: (message) =>
     set((state) => ({
       clientDisplayMessages: [...state.clientDisplayMessages, message],

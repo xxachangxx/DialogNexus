@@ -1,15 +1,17 @@
-
 import type { LLMMessage } from '@/types/message'
 import { createUserMessage, createAssistantMessage, createSystemMessage} from './chatUtils'
 import { StreamingChatClient } from '@/services/StreamingChatClient'
 import { useUIStore } from '@/store/ui'
 import { useChatStore } from '@/store/chat'
 import { useSessionStore } from '@/store/session'
+import { useRouter } from 'next/navigation'
 
 // 创建单个客户端实例
 const chatClient = new StreamingChatClient()
 
 export function useChatHandlers() {
+  const router = useRouter()
+
   // 从zustand获取状态和方法
   const { 
     clientDisplayMessages,
@@ -19,7 +21,8 @@ export function useChatHandlers() {
     addMessage,
     appendToLastMessage,
     setSystemPrompt,
-    clearMessages
+    clearMessages,
+    setClientDisplayMessages,
   } = useChatStore()
 
   const { 
@@ -37,7 +40,7 @@ export function useChatHandlers() {
     currentSessionId,
     setCurrentSessionId,
     addSession,
-    setMessages,
+    setSessionMessages,
     removeSession,
   } = useSessionStore()
 
@@ -128,9 +131,14 @@ export function useChatHandlers() {
 
   // Session 处理函数
   const handleSessionClick = (id: string) => {
-    const session = sessions[id]
-    setMessages(id, session.messages)
+    const session = sessions.get(id)
+    if (!session) return;
+    
+    setSessionMessages(currentSessionId, [...clientDisplayMessages])
+    setClientDisplayMessages(session.messages)
     setCurrentSessionId(id)
+    router.push(`/chat/${id}`)
+    console.log('当前会话ID:', currentSessionId)
   }
 
   const handleAddSession = () => {
