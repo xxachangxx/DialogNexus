@@ -1,6 +1,6 @@
 
 import type { LLMMessage } from '@/types/message'
-import { createUserMessage, createAssistantMessage } from './chatUtils'
+import { createUserMessage, createAssistantMessage, createSystemMessage} from './chatUtils'
 import { StreamingChatClient } from '@/services/StreamingChatClient'
 import { useUIStore } from '@/store/ui'
 import { useChatStore } from '@/store/chat'
@@ -12,7 +12,7 @@ const chatClient = new StreamingChatClient()
 export function useChatHandlers() {
   // 从zustand获取状态和方法
   const { 
-    messages,
+    clientDisplayMessages,
     systemPrompt,
     isLoading,
     setIsLoading,
@@ -56,7 +56,7 @@ export function useChatHandlers() {
     addMessage(tempAssistantMessage)
 
     // 提取messages中的role和content
-    const llmMessages = messages.map(({ role, content }) => ({ role, content })) as LLMMessage[];
+    const llmMessages = clientDisplayMessages.map(({ role, content }) => ({ role, content })) as LLMMessage[];
     llmMessages.push({ role: userNewMessage.role, content: userNewMessage.content });
 
     console.log('准备发送的消息列表:', JSON.stringify(llmMessages, null, 2));
@@ -139,7 +139,7 @@ export function useChatHandlers() {
       assistantName: "新助手",
       createdAt: new Date(),
       updatedAt: new Date(),
-      messages: [],
+      messages: [createSystemMessage("You are a helpful assistant.")],
     })
   }
   
@@ -151,7 +151,7 @@ export function useChatHandlers() {
 
   return {
     // 状态
-    messages,
+    clientDisplayMessages,
     sessions,
     currentSessionId, 
     systemPrompt,

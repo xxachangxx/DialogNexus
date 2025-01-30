@@ -83,7 +83,10 @@ const SessionItem = ({ id, name, handleRemoveSession }: { id: string, name: stri
         </DropdownMenuTrigger>
         <DropdownMenuContent side="right" align="start">
           <DropdownMenuItem onClick={() => handleRemoveSession(id)}>
-            <span>Delete Session</span>
+            <span>Delete</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <span>Rename</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -10,7 +10,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export default function Home() {
   const {
-    messages,
+    clientDisplayMessages,
     sessions,
     isLoading,
     inputText,
@@ -47,7 +47,7 @@ export default function Home() {
                     shadow-sm
                     overflow-hidden"
             >
-              <ChatBox messages={messages} />
+              <ChatBox messages={clientDisplayMessages} />
               <InputArea
                 value={inputText}
                 onChange={handleInputChange}

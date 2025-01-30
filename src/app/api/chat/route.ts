@@ -13,8 +13,8 @@ export async function POST(request: NextRequest) {
     console.log('处理后的messages:', JSON.stringify(messages, null, 2));
 
     const client = new OpenAI({
-        apiKey: "sk-B5aiR0r1ljcLCPfLEc0443E186E24149B94aBb853a22743e",
-        baseURL: "https://aihubmix.com/v1"
+        apiKey: "sk-xP5DrMSO3fRYmIsrC7E38a171b494387B9A34038F8DaB21a",
+        baseURL: "https://api.gpt.ge/v1"
     });
 
     // 确保消息格式正确
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     // 设置流式响应
     const response = await client.chat.completions.create({
-        model: "gemini-2.0-flash-exp",
+        model: "gpt-4o",
         messages: formattedMessages,
         temperature: 0.2,
         frequency_penalty: 0,
