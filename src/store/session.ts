@@ -2,24 +2,24 @@ import { create } from "zustand";
 import { Session, SessionMap } from "@/types/session";
 import { generateSessionId } from "@/hooks/chatUtils";
 import { ClientDisplayMessage } from "@/types/message";
-
+import { createSystemMessage } from "@/hooks/chatUtils";
 interface SessionState {
   // 核心状态
   sessions: SessionMap;
   currentSessionId: string;
   // 操作方法
   setCurrentSessionId: (id: string) => void;
-  addSession: (session: Session) => void;
+  addSession: (session: Session) => string;
   removeSession: (id: string) => void;
   setSessionMessages: (id: string, messages: ClientDisplayMessage[]) => void;
 }
 
-const DEFAULT_SESSION = {
+export const DEFAULT_SESSION = {
   name: "默认话题",
   createdAt: new Date(),
   updatedAt: new Date(),
   assistantName: "默认助手",
-  messages: [],
+  messages: [createSystemMessage("You are a helpful assistant.")],
 };
 
 export const useSessionStore = create<SessionState>((set) => {
@@ -32,13 +32,17 @@ export const useSessionStore = create<SessionState>((set) => {
     currentSessionId: defaultSessionId,
     // 状态更新方法
     setCurrentSessionId: (id: string) => set({ currentSessionId: id }),
-    addSession: (session: Session) =>
+    addSession: (session: Session) => {
+      const newSessionId = generateSessionId();
       set((state) => ({
-        sessions: new Map(state.sessions).set(generateSessionId(), session),
-      })),
-
+        sessions: new Map(state.sessions).set(newSessionId, session),
+      }));
+      console.log("添加会话ID:", newSessionId);
+      return newSessionId;
+    },
     removeSession: (id: string) =>
       set((state) => {
+        console.log("删除会话ID:", id);
         const newSessions = new Map(state.sessions);
         // 获取删除前的会话ID列表，可以据此计算next or prev session id
         const sessionIds = Array.from(newSessions.keys());

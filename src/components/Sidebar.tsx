@@ -24,10 +24,11 @@ interface SideBarProps {
   sessions: SessionMap;
   handleAddSession: () => void;
   handleRemoveSession: (id: string) => void;
+  handleSessionClick: (id: string) => void;
 }
 
 
-const SideBar = ({ sessions, handleAddSession, handleRemoveSession }: SideBarProps) => {
+const SideBar = ({ sessions, handleAddSession, handleRemoveSession, handleSessionClick }: SideBarProps) => {
   return (
     <Sidebar >
       <SidebarHeader>
@@ -39,8 +40,8 @@ const SideBar = ({ sessions, handleAddSession, handleRemoveSession }: SideBarPro
       <SidebarGroup>
         <SidebarContent>
           <SidebarMenu>
-            {Object.entries(sessions).map(([id, session]) => (
-              <SessionItem key={id} id={id} name={session.name} handleRemoveSession={handleRemoveSession} />
+            {Array.from(sessions.entries()).map(([id, session]) => (
+              <SessionItem key={id} id={id} name={session.name} handleSessionClick={handleSessionClick} handleRemoveSession={handleRemoveSession} />
             ))}
           </SidebarMenu>
         </SidebarContent>
@@ -69,10 +70,10 @@ const CustomHeader = ({ children, className, handleAddSession }: { children: str
   )
 }
 
-const SessionItem = ({ id, name, handleRemoveSession }: { id: string, name: string, handleRemoveSession: (id: string) => void }) => {
+const SessionItem = ({ id, name, handleSessionClick, handleRemoveSession }: { id: string, name: string, handleSessionClick: (id: string) => void, handleRemoveSession: (id: string) => void }) => {
   return (
     <SidebarMenuItem key={id}>
-      <SidebarMenuButton size="lg">
+      <SidebarMenuButton size="lg" onClick={() => handleSessionClick(id)}>
         <span>{name}</span>
       </SidebarMenuButton>
       <DropdownMenu>

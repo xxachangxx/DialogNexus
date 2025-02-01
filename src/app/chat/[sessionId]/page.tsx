@@ -38,9 +38,13 @@ export default function ChatPage() {
   // 当路由参数变化时，加载对应的会话
   useEffect(() => {
     if (sessionId && sessionId !== currentSessionId) {
-      handleSessionClick(sessionId);
+      // 添加防抖或节流逻辑
+      const timer = setTimeout(() => {
+        handleSessionClick(sessionId);
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [sessionId, currentSessionId]);
+  }, [sessionId, currentSessionId, handleSessionClick]);
 
   return (
     <main className="w-screen h-screen flex">
@@ -49,6 +53,7 @@ export default function ChatPage() {
           sessions={sessions} 
           handleAddSession={handleAddSession} 
           handleRemoveSession={handleRemoveSession} 
+          handleSessionClick={handleSessionClick}
         />
         <SidebarInset>
           <section className="flex-1 h-full bg-gray-50 p-6">

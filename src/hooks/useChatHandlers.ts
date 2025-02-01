@@ -132,13 +132,18 @@ export function useChatHandlers() {
   // Session 处理函数
   const handleSessionClick = (id: string) => {
     const session = sessions.get(id)
-    if (!session) return;
+    console.log('previousSessionId', currentSessionId)
+    console.log('Click Session ID', id)
     
-    setSessionMessages(currentSessionId, [...clientDisplayMessages])
-    setClientDisplayMessages(session.messages)
+    if (!session) return;
+
+    // 保存当前会话状态
+    const previousSessionId = currentSessionId;
+    setSessionMessages(previousSessionId, [...clientDisplayMessages])
     setCurrentSessionId(id)
+    setClientDisplayMessages(session.messages)
+
     router.push(`/chat/${id}`)
-    console.log('当前会话ID:', currentSessionId)
   }
 
   const handleAddSession = () => {

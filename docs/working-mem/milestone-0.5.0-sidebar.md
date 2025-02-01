@@ -3,8 +3,8 @@
 ## 基本信息
 * Milestone版本: 0.5.0-dev
 * 分支名称: feature/sidebar
-* 开始日期: 2024-01-28
-* 预计完成日期: 2024-02-03
+* 开始日期: 2025-01-28
+* 预计完成日期: 2025-02-03
 * 状态: 进行中
 
 ## 目标概述
@@ -34,7 +34,7 @@
 - [x] 触摸手势支持
 
 ## 开发日志
-### 2024-01-28
+### 2025-01-28
 #### 完成的工作
 * 创建基础sidebar组件结构
 * 实现sidebar的基础UI框架
@@ -49,7 +49,7 @@
 
 #### 遇到的问题
 
-### 2024-01-29
+### 2025-01-29
 #### 完成的工作
 * [x] 实现基础会话列表组件
 * [x] 完成新建会话功能
@@ -95,6 +95,72 @@
 * 会话重命名功能实现
 * 路由系统集成
 * 数据持久化方案
+
+### 2025-01-31
+#### 完成的工作
+* [x] 实现动态路由系统
+  * 创建 `/chat/[sessionId]` 动态路由页面
+  * 实现基于路由参数的会话加载
+  * 复用现有组件和状态管理逻辑
+* [x] 优化会话切换机制
+  * 添加路由参数监听
+  * 实现会话自动加载
+  * 保持UI状态同步
+
+#### 技术决策
+##### 动态路由实现方案
+* 使用Next.js App Router的动态路由功能
+* 采用`useParams` hook获取路由参数
+* 通过`useEffect`监听路由变化并加载对应会话
+* 复用现有的`useChatHandlers` hook保持状态管理一致性
+
+##### 代码组织优化
+* 将页面组件逻辑从`page.tsx`迁移到`[sessionId]/page.tsx`
+* 保持组件结构和样式的一致性
+* 通过props和hooks实现状态共享
+
+#### 遇到的问题
+* 路由参数变化时需要确保会话状态正确加载
+* 需要处理无效sessionId的情况
+* 会话切换时的状态同步需要优化
+
+
+### 2025-02-01
+#### 完成的工作
+* [x] 优化会话状态管理
+  * 重构`useChatHandlers`中的会话切换逻辑
+  * 添加会话切换防抖处理
+  * 优化会话状态保存机制
+* [x] 完善路由系统集成
+  * 实现根路由到默认会话的自动跳转
+  * 优化会话ID的生成和管理
+  * 添加默认系统消息
+* [x] 重构组件通信
+  * 完善Sidebar组件的props接口
+  * 优化SessionItem的点击事件处理
+  * 规范化组件间的数据流
+
+#### 技术决策
+##### 状态管理优化
+* 在会话切换时保存前一个会话的状态
+* 使用Map数据结构存储会话数据
+* 添加会话操作的日志记录
+
+##### 路由重定向策略
+* 根路由自动重定向到第一个可用会话
+* 无会话时自动创建默认会话
+* 保持路由状态与会话状态同步
+
+#### 遇到的问题
+1. 会话切换时的状态不同步问题
+- 点击会话A时，currentSessionId 还是会话B
+- URL 变化触发 useEffect，导致重复调用 handleSessionClick
+- 整个过程中 URL 显示不变
+
+2. 问题的根本原因
+- 状态更新（setCurrentSessionId）是异步的
+- router.push 触发路由变化也是异步的
+- useEffect 的依赖项包含了 sessionId 和 currentSessionId，导致重复触发
 
 ## 待办事项
 ### 第一优先级
@@ -183,36 +249,73 @@
 * 集成动态路由系统
 * 优化移动端交互体验
 
-### 2024-01-31
-#### 完成的工作
-* [x] 实现动态路由系统
-  * 创建 `/chat/[sessionId]` 动态路由页面
-  * 实现基于路由参数的会话加载
-  * 复用现有组件和状态管理逻辑
-* [x] 优化会话切换机制
-  * 添加路由参数监听
-  * 实现会话自动加载
-  * 保持UI状态同步
 
-#### 技术决策
-##### 动态路由实现方案
-* 使用Next.js App Router的动态路由功能
-* 采用`useParams` hook获取路由参数
-* 通过`useEffect`监听路由变化并加载对应会话
-* 复用现有的`useChatHandlers` hook保持状态管理一致性
 
-##### 代码组织优化
-* 将页面组件逻辑从`page.tsx`迁移到`[sessionId]/page.tsx`
-* 保持组件结构和样式的一致性
-* 通过props和hooks实现状态共享
+## props和state流向
+<div style="width: 100%; height: 800px;">
 
-#### 遇到的问题
-* 路由参数变化时需要确保会话状态正确加载
-* 需要处理无效sessionId的情况
-* 会话切换时的状态同步需要优化
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '16px' }, 'flowchart': { 'scale': 1.2 } }}%%
+graph TB
+    %% Stores
+    subgraph Stores
+        ChatStore[Chat Store<br/>clientDisplayMessages<br/>systemPrompt<br/>isLoading]
+        UIStore[UI Store<br/>inputText<br/>isModalOpen<br/>isClearConfirmOpen]
+        SessionStore[Session Store<br/>sessions<br/>currentSessionId]
+    end
 
-#### 下一步计划
-* 实现会话切换的过渡动画
-* 添加路由加载状态
-* 优化会话数据的预加载
-* 实现404页面处理 
+    %% Router
+    Router[Next Router]
+
+    %% Hooks
+    subgraph Hooks
+        useChatHandlers[useChatHandlers<br/>消息处理<br/>会话管理<br/>UI交互<br/>路由控制]
+    end
+
+    %% Components
+    subgraph Components
+        ChatPage[ChatPage]
+        subgraph UI组件
+            Sidebar[Sidebar<br/>会话列表<br/>会话操作]
+            ChatBox[ChatBox<br/>消息显示]
+            InputArea[InputArea<br/>消息输入<br/>发送控制]
+            EditModal[EditModal<br/>消息编辑]
+            ConfirmModal[ConfirmModal<br/>确认操作]
+        end
+    end
+
+    %% Store States
+    ChatStore -->|状态和方法| useChatHandlers
+    UIStore -->|状态和方法| useChatHandlers
+    SessionStore -->|状态和方法| useChatHandlers
+    Router -->|路由方法| useChatHandlers
+
+    %% Hook to Components
+    useChatHandlers -->|所有状态和处理方法| ChatPage
+    
+    %% Component Props Flow
+    ChatPage -->|sessions, handlers| Sidebar
+    ChatPage -->|messages| ChatBox
+    ChatPage -->|value, handlers| InputArea
+    ChatPage -->|modal states, handlers| EditModal
+    ChatPage -->|modal states, handlers| ConfirmModal
+
+    %% User Interactions
+    Sidebar -->|onClick, onAdd, onRemove| useChatHandlers
+    InputArea -->|onChange, onSend| useChatHandlers
+    EditModal -->|onSubmit, onClose| useChatHandlers
+    ConfirmModal -->|onConfirm, onCancel| useChatHandlers
+
+    %% Styling
+    classDef store fill:#f9f,stroke:#333,stroke-width:2px
+    classDef hook fill:#bbf,stroke:#333,stroke-width:2px
+    classDef component fill:#dfd,stroke:#333,stroke-width:2px
+    classDef router fill:#ffd,stroke:#333,stroke-width:2px
+    
+    class ChatStore,UIStore,SessionStore store
+    class useChatHandlers hook
+    class ChatPage,Sidebar,ChatBox,InputArea,EditModal,ConfirmModal component
+    class Router router
+```
+
+</div>
